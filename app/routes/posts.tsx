@@ -5,8 +5,6 @@ import { Outlet } from "@remix-run/react";
 
 export async function loader() {
   const posts = await postsGetAll()
-  console.log('loading...')
-  console.log(posts)
   return json(posts.data || [])
 }
 
