@@ -1,5 +1,5 @@
 import { Link, useLoaderData } from "@remix-run/react"
-import { postsGetAll } from "~/models/posts.server"
+import { postsGetAll } from "~/models/posts/db.server"
 import { json } from '@remix-run/node'
 import { Outlet } from "@remix-run/react";
 
@@ -14,17 +14,25 @@ export default function Posts() {
   return (
     <main>
       <h1>These are my posts</h1>
-      <div>
-        <ol>{posts.map((post) => (
-          <li key={post.id}>
-            <Link to={post.slug}>{post.title}</Link>
-          </li>
-        ))}
-        </ol>
+      <div className="flex gap-4 mb-2">
         <Link to="/">Home</Link>
         <Link to="new">Create post</Link>
       </div>
-      <Outlet/>
+      <div className="grid grid-cols-[30%_1fr] gap-8">
+        <div>
+          <ol>{posts.map((post) => (
+            <li key={post.id}>
+              <Link to={post.slug}>
+                {post.title}
+              </Link>
+            </li>
+          ))}
+          </ol>
+        </div>
+        <div >
+          <Outlet/>
+        </div>
+      </div>
     </main>
   )
 }

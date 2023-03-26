@@ -1,7 +1,8 @@
-import { supabase } from '../utils/supabase.server'
+import { supabase } from '~/utils/supabase.server'
 import type { Database } from '~/utils/supabase_types.server'
 
 type Posts = Database['public']['Tables']['posts']
+export type Post = Posts['Row']
 export type PostsInsert = Posts['Insert']
 
 export async function postsGetAll() {
@@ -11,12 +12,11 @@ export async function postsGetAll() {
     .order('created_at')
 }
 
-export async function postGet(slug: Posts['Row']['slug']) {
+export async function postGet(slug: Post['slug']) {
   return await supabase
     .from('posts')
     .select('*')
     .eq('slug', slug)
-    .limit(1)
     .single()
 }
 
@@ -25,6 +25,12 @@ export async function postCreate(post: PostsInsert) {
     .from('posts')
     .insert(post)
     .select('slug')
-    .limit(1)
     .single()
+}
+
+export async function postUpdate({ id, post }: { id: Post['id']; post: Posts['Update'] }) {
+  return await supabase
+    .from('posts')
+    .update({...post})
+    .eq('id', id)
 }

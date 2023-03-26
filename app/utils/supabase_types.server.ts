@@ -12,7 +12,7 @@ export interface Database {
       posts: {
         Row: {
           created_at: string
-          id: number
+          id: string
           slug: string
           text: string | null
           title: string
@@ -20,7 +20,7 @@ export interface Database {
         }
         Insert: {
           created_at?: string
-          id?: number
+          id?: string
           slug: string
           text?: string | null
           title: string
@@ -28,7 +28,7 @@ export interface Database {
         }
         Update: {
           created_at?: string
-          id?: number
+          id?: string
           slug?: string
           text?: string | null
           title?: string

@@ -1,92 +1,70 @@
-import { Form, useActionData, useTransition } from "@remix-run/react"
+import { useActionData } from "@remix-run/react"
 import type { ActionArgs} from "@remix-run/node";
-import { redirect, json } from "@remix-run/node"
-import { postCreate } from "~/models/posts.server"
-
-const INTENT = {
-  create: 'create',
-  update: 'update',
-  delete: 'delete',
-} as const
-
-const DUPLICATE_ERROR_CODE = '23505'
-
-const ERROR_MSG = {
-  empty: 'Title must be defined',
-  duplicate: 'Title already have been used. Must be unique',
-  database: 'Database error',
-} as const
-
-async function respondWithError(message: string, status: number) {
-  return json({ error: { message }}, { status, statusText: message })
-}
-
-function processPostFormData(formData: FormData) {
-  const title = formData.get('title')?.toString() || ''
-  const text = formData.get('text')?.toString() || ''
-
-  const error = !title
-  const valid = Boolean(title)
-  const post = {
-    title,
-    text,
-    slug: title.trim().toLowerCase().split(' ').join('_'),
-  }
-
-  return { valid, error, post }
-}
+import { redirect} from "@remix-run/node"
+import {  DUPLICATE_ERROR_CODE, ERROR_MSG, INTENT } from '~/models/posts/const'
+import { PostForm } from '~/components/PostForm'
+import { getSlugFromTitle, respondWithError } from "~/models/posts/actions.server"
+import type { PostsInsert } from "~/models/posts/db.server";
+import { postCreate } from "~/models/posts/db.server"
+import { z } from "zod";
 
 export async function action({ request }: ActionArgs) {
   const formData = await request.formData()
   const intent = formData.get('intent')
 
-  switch(intent) {
-    case INTENT.create:
-      const { valid, post } = processPostFormData(formData)
-
-      if (!valid) {
-        return respondWithError(ERROR_MSG.empty, 400)
-      }
-
-      const { error: sbError } = await postCreate(post)
-
-      if (sbError?.code === DUPLICATE_ERROR_CODE) {
-        return respondWithError(ERROR_MSG.duplicate, 400)
-      }
-
-      if (sbError) {
-        return respondWithError(ERROR_MSG.database, 500)
-      }
-
-      return redirect('/posts')
-    default:
-      throw new Error(`no such intent: "${intent}"`)
+  if (intent !== INTENT.create) {
+    throw new Error(`Intent "${intent}" not allowed`)
   }
+    
+  const userData = {
+    title: formData.get('title'),
+    text: formData.get('text'),
+  }
+  
+  const Post = z.object({
+    title: z.string({
+      required_error: ERROR_MSG.empty, 
+    }).nonempty(ERROR_MSG.empty),
+    text: z.string().optional(),
+  })
+
+  let post: PostsInsert;
+
+  try {
+    const validatedData = Post.parse(userData);
+    const slug = getSlugFromTitle(validatedData.title)
+    const timestamp = new Date().toISOString()
+    post = { 
+      ...validatedData, 
+      slug,
+      created_at: timestamp,
+      updated_at: timestamp, 
+    }
+  } catch (error) {
+    return respondWithError(ERROR_MSG.empty, 400)
+  }
+
+  const { error: sbError } = await postCreate(post)
+
+  if (sbError?.code === DUPLICATE_ERROR_CODE) {
+    return respondWithError(ERROR_MSG.duplicate, 400)
+  }
+
+  if (sbError) {
+    return respondWithError(ERROR_MSG.database, 500)
+  }
+
+  return redirect('/posts')
 }
 
 export default function NewPost() {
   const res = useActionData<typeof action>()
-  const transition = useTransition()
-  const isCreating = 
-    transition.submission?.formData.get('intent') === INTENT.create 
-    && transition.state !== 'idle'
 
   return (
-    <Form method="post">
-      <label >
-        Title:
-        {res?.error.message === ERROR_MSG.empty ? <em>is required</em> : null}
-        {res?.error.message === ERROR_MSG.duplicate ? <em>already have been used, must be unique</em> : null}
-        {res?.error.message === ERROR_MSG.database ? <em>database error</em> : null}
-        <input type='text' name='title'/>
-      </label>
-      <label >
-        Text:
-        <input type='text' name='text'/>
-      </label>
-      <button type='submit' name='intent' value={INTENT.create} disabled={isCreating}>
-        {isCreating ? 'Creating...' : 'Create'}
-      </button>
-    </Form>
+    <PostForm
+      titleError={res?.error.message}
+      method="post" 
+      replace
+    />
   )
 }
