@@ -41,16 +41,19 @@ export async function action({ request }: ActionArgs) {
       updated_at: timestamp, 
     }
   } catch (error) {
+    console.error(error)
     return respondWithError(ERROR_MSG.empty, 400)
   }
 
   const { error: sbError } = await postCreate(post)
 
   if (sbError?.code === DUPLICATE_ERROR_CODE) {
+    console.error(sbError)
     return respondWithError(ERROR_MSG.duplicate, 400)
   }
 
   if (sbError) {
+    console.error(sbError)
     return respondWithError(ERROR_MSG.database, 500)
   }
 

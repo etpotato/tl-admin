@@ -34,3 +34,10 @@ export async function postUpdate({ id, post }: { id: Post['id']; post: Posts['Up
     .update({...post})
     .eq('id', id)
 }
+
+export async function postDelete(id: Post['id']) {
+  return await supabase
+    .from('posts')
+    .delete()
+    .eq('id', id)
+}

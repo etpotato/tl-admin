@@ -2,7 +2,8 @@ import { useLoaderData } from "@remix-run/react"
 import type { ActionArgs, LoaderArgs} from '@remix-run/node';
 import { redirect} from '@remix-run/node';
 import { json } from '@remix-run/node'
-import type { PostsInsert, Post } from "~/models/posts/db.server";
+import type { PostsInsert, Post} from "~/models/posts/db.server";
+import { postDelete } from "~/models/posts/db.server";
 import { postGet, postUpdate } from "~/models/posts/db.server";
 import { z } from 'zod'
 import { getParsedDate } from "~/utils/ui";
@@ -14,64 +15,81 @@ export async function action({ request }: ActionArgs) {
   const formData = await request.formData()
   const intent = formData.get('intent')
 
-  if (intent !== INTENT.update) {
-    throw new Error(`Intent "${intent}" not allowed`)
-  }
-
-  const userData = {
-    title: formData.get('title'),
-    text: formData.get('text'),
-    id: formData.get('postId'),
-  }
-
-  const PostSchema = z.object({
-    title: z.string({
-      required_error: ERROR_MSG.empty, 
-    }).nonempty(ERROR_MSG.empty),
-    text: z.string().optional(),
-    id: z.string(),
-  })
-
-  let post: PostsInsert
-  let id: Post['id']
-
-  try {
-    const validatedData = PostSchema.parse(userData);
-    console.log('validated data', validatedData)
-    id = validatedData.id
-    const slug = getSlugFromTitle(validatedData.title)
-    post = {
-      slug,
-      title: validatedData.title,
-      text: validatedData.text,
-      updated_at: new Date().toISOString(),
+  if (intent === INTENT.update) {
+    const userData = {
+      title: formData.get('title'),
+      text: formData.get('text'),
+      id: formData.get('postId'),
     }
-    console.log('post', post)
-  } catch (error) {
-    return respondWithError(ERROR_MSG.empty, 400)
+
+    const PostSchema = z.object({
+      title: z.string({
+        required_error: ERROR_MSG.empty, 
+      }).nonempty(ERROR_MSG.empty),
+      text: z.string().optional(),
+      id: z.string(),
+    })
+
+    let post: PostsInsert
+    let id: Post['id']
+
+    try {
+      const validatedData = PostSchema.parse(userData);
+      id = validatedData.id
+      const slug = getSlugFromTitle(validatedData.title)
+      post = {
+        slug,
+        title: validatedData.title,
+        text: validatedData.text,
+        updated_at: new Date().toISOString(),
+      }
+    } catch (error) {
+      console.error(error)
+      return respondWithError(ERROR_MSG.empty, 400)
+    }
+
+    const { error: sbError } = await postUpdate({ id, post })
+
+    if (sbError?.code === DUPLICATE_ERROR_CODE) {
+      console.error(sbError)
+      return respondWithError(ERROR_MSG.duplicate, 400)
+    }
+
+    if (sbError) {
+      console.error(sbError)
+      return respondWithError(ERROR_MSG.database, 500)
+    }
+
+    return redirect(`/posts/${post.slug}`)
   }
 
-  const { error: sbError } = await postUpdate({ id, post })
+  if (intent === INTENT.delete) {
+    const userDataId = formData.get('postId')
+    let id: Post['id']
 
-  if (sbError?.code === DUPLICATE_ERROR_CODE) {
-    console.log(sbError)
-    return respondWithError(ERROR_MSG.duplicate, 400)
+    try {
+      id = z.string().parse(userDataId)
+    } catch (error) {
+      console.error(error)
+      return respondWithError('Post id is required', 400)
+    }
+
+    const { error } = await postDelete(id)
+
+    if (error) {
+      console.error(error)
+      return respondWithError(ERROR_MSG.database, 500)
+    }
+
+    return redirect('/posts')
   }
 
-  if (sbError) {
-    console.log(sbError)
-    return respondWithError(ERROR_MSG.database, 500)
-  }
-
-  return redirect(`/posts/${post.slug}`)
+  throw new Error(`Intent "${intent}" not allowed`)
 }
 
 export async function loader({ params }: LoaderArgs) {
   const slug = z.string().parse(params.slug)
-
   const post = await postGet(slug)
-
-  console.log('post.data', post.data)
   return json(post.data)
 }
 
@@ -101,15 +119,6 @@ export default function PostArticle() {
         method="put"
         replace
       />
-      {/* <button
-        type='submit'
-        name='intent'
-        value={INTENT.delete}
-        disabled={loading.delete}
-        className='border-red-600'
-      >
-        {loading.delete ? 'Deleting...' : 'Delete'}
-      </button> */}
     </>
   ) 
 }

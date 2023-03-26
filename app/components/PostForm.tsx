@@ -23,38 +23,55 @@ export const PostForm: FC<PostFormProps> = ({ defaultTitle, defaultText, titleEr
   }
 
   return (
-    <Form {...props}>
-      <label >
-        Title:
-        {titleError ? <em className='text-red-600'> {titleError}</em> : null}
-        <input type='text' name='title' defaultValue={defaultTitle} className="block mb-2"/>
-      </label>
-      <label >
-        Text:
-      <textarea name='text' defaultValue={defaultText || ''} className="block mb-2" rows={5} />
-      </label>
-      { postId ? <input type='hidden' name='postId' defaultValue={postId} /> : null }
-      { postId ? (
-          <button 
-          type='submit'
-          name='intent'
-          value={INTENT.update}
-          disabled={loading.update}
-          className='border-yellow-600'
-        >
-          {loading.update ? 'Updating...' : 'Update'}
-        </button>
-      ) : (
-          <button
+    <>
+      <Form {...props}>
+        <label >
+          Title:
+          {titleError ? <em className='text-red-600'> {titleError}</em> : null}
+          <input type='text' name='title' defaultValue={defaultTitle} className="block mb-2"/>
+        </label>
+        <label >
+          Text:
+        <textarea name='text' defaultValue={defaultText || ''} className="block mb-2" rows={5} />
+        </label>
+        { postId ? <input type='hidden' name='postId' value={postId} /> : null }
+        { postId ? (
+            <button 
             type='submit'
             name='intent'
-            value={INTENT.create}
-            disabled={loading.create}
-            className='border-green-600'
+            value={INTENT.update}
+            disabled={loading.update}
+            className='border-yellow-600'
           >
-            {loading.create ? 'Creating...' : 'Create'}
+            {loading.update ? 'Updating...' : 'Update'}
           </button>
-      )}
-    </Form>
+        ) : (
+            <button
+              type='submit'
+              name='intent'
+              value={INTENT.create}
+              disabled={loading.create}
+              className='border-green-600'
+            >
+              {loading.create ? 'Creating...' : 'Create'}
+            </button>
+        )}
+      </Form>
+      { postId ? ( 
+          <Form method="delete" className='mt-4'>
+            <input type='hidden' name='postId' value={postId} />
+            <button
+              type='submit'
+              name='intent'
+              value={INTENT.delete}
+              disabled={loading.delete}
+              className='border-red-600'
+            >
+              {loading.delete ? 'Deleting...' : 'Delete'}
+            </button>
+          </Form>
+        ) : null 
+      }
+    </>
   )
 }
