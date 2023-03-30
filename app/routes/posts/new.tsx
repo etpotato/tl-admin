@@ -8,33 +8,28 @@ import type { PostsInsert } from "~/models/posts/db.server";
 import { postCreate } from "~/models/posts/db.server"
 import { z } from "zod";
 
+const PostSchema = z.object({
+  title: z.string({
+    required_error: ERROR_MSG.empty, 
+  }).nonempty(ERROR_MSG.empty),
+  text: z.string().optional(),
+})
+
 export async function action({ request }: ActionArgs) {
   const formData = await request.formData()
-  const intent = formData.get('intent')
+  const userData = Object.fromEntries(formData.entries())
 
-  if (intent !== INTENT.create) {
-    throw new Error(`Intent "${intent}" not allowed`)
+  if (userData.intent !== INTENT.create) {
+    throw new Error(`Intent "${userData.intent}" not allowed`)
   }
-    
-  const userData = {
-    title: formData.get('title'),
-    text: formData.get('text'),
-  }
-  
-  const Post = z.object({
-    title: z.string({
-      required_error: ERROR_MSG.empty, 
-    }).nonempty(ERROR_MSG.empty),
-    text: z.string().optional(),
-  })
 
   let post: PostsInsert;
 
   try {
-    const validatedData = Post.parse(userData);
+    const validatedData = PostSchema.parse(userData);
     const slug = getSlugFromTitle(validatedData.title)
     const timestamp = new Date().toISOString()
-    post = { 
+    post = {
       ...validatedData, 
       slug,
       created_at: timestamp,

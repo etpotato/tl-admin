@@ -11,31 +11,25 @@ import { PostForm } from "~/components/PostForm";
 import { DUPLICATE_ERROR_CODE, ERROR_MSG, INTENT } from "~/models/posts/const";
 import { getSlugFromTitle, respondWithError } from "~/models/posts/actions.server";
 
+const PostUpdateSchema = z.object({
+  title: z.string({
+    required_error: ERROR_MSG.empty, 
+  }).nonempty(ERROR_MSG.empty),
+  text: z.string().optional(),
+  postId: z.string(),
+})
+
 export async function action({ request }: ActionArgs) {
   const formData = await request.formData()
-  const intent = formData.get('intent')
+  const userData = Object.fromEntries(formData.entries())
 
-  if (intent === INTENT.update) {
-    const userData = {
-      title: formData.get('title'),
-      text: formData.get('text'),
-      id: formData.get('postId'),
-    }
-
-    const PostSchema = z.object({
-      title: z.string({
-        required_error: ERROR_MSG.empty, 
-      }).nonempty(ERROR_MSG.empty),
-      text: z.string().optional(),
-      id: z.string(),
-    })
-
+  if (userData.intent === INTENT.update) {
     let post: PostsInsert
     let id: Post['id']
 
     try {
-      const validatedData = PostSchema.parse(userData);
-      id = validatedData.id
+      const validatedData = PostUpdateSchema.parse(userData);
+      id = validatedData.postId
       const slug = getSlugFromTitle(validatedData.title)
       post = {
         slug,
@@ -63,12 +57,11 @@ export async function action({ request }: ActionArgs) {
     return redirect(`/posts/${post.slug}`)
   }
 
-  if (intent === INTENT.delete) {
-    const userDataId = formData.get('postId')
+  if (userData.intent === INTENT.delete) {
     let id: Post['id']
 
     try {
-      id = z.string().parse(userDataId)
+      id = z.string().parse(userData.postId)
     } catch (error) {
       console.error(error)
       return respondWithError('Post id is required', 400)
@@ -84,7 +77,7 @@ export async function action({ request }: ActionArgs) {
     return redirect('/posts')
   }
 
-  throw new Error(`Intent "${intent}" not allowed`)
+  throw new Error(`Intent "${userData.intent}" not allowed`)
 }
 
 export async function loader({ params }: LoaderArgs) {
@@ -102,13 +95,13 @@ export default function PostArticle() {
 
   return (
     <>
-      <article>
-        <h2>{post.title}</h2>
-        <p>{post.text}</p>
-        <p>Created: {getParsedDate(post.created_at)}</p>
+      <article className="mb-8">
+        <h2 className="mt-0">{post.title}</h2>
+        <p className="mt-0">{post.text}</p>
+        <p className="my-0 text-xs font-mono">Created: {getParsedDate(post.created_at)}</p>
         { post.updated_at === post.created_at 
           ? null 
-          : <p>Updated: {getParsedDate(post.updated_at)}</p>
+          : <p className="my-0 text-xs font-mono">Updated: {getParsedDate(post.updated_at)}</p>
         }
       </article>
       <PostForm

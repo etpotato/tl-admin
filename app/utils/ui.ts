@@ -1,4 +1,4 @@
 export function getParsedDate(date: string) {
   const dateObj = new Date(date);
-  return `${dateObj.toLocaleTimeString()} ${dateObj.toLocaleDateString()}`
+  return `${dateObj.getDate()}.${dateObj.getMonth()}.${dateObj.getFullYear()} ${dateObj.getHours()}:${dateObj.getMinutes()}`
 }
