@@ -8,7 +8,8 @@ import { postGet, postUpdate } from "~/models/posts/db.server";
 import { z } from 'zod'
 import { getParsedDate } from "~/utils/ui";
 import { PostForm } from "~/components/PostForm";
-import { DUPLICATE_ERROR_CODE, ERROR_MSG, INTENT } from "~/models/posts/const";
+import { ERROR_MSG, INTENT } from "~/models/posts/const";
+import { DUPLICATE_ERROR_CODE } from '~/const'
 import { getSlugFromTitle, respondWithError } from "~/models/posts/actions.server";
 
 const PostUpdateSchema = z.object({

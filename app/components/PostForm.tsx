@@ -11,8 +11,6 @@ type PostFormProps = FormProps & {
   postId?: Post['id'];
 }
 
-const BTN = 'block no-underline py-1 px-4 border-1 border-inherit border-solid rounded cursor-pointer'
-
 export const PostForm: FC<PostFormProps> = ({ defaultTitle, defaultText, titleError, postId, ...props }) => {
   const transition = useTransition()
   const loading = {
@@ -43,7 +41,7 @@ export const PostForm: FC<PostFormProps> = ({ defaultTitle, defaultText, titleEr
             name='intent'
             value={INTENT.update}
             disabled={loading.update}
-            className={`${BTN} text-yellow-600`}
+            className="text-yellow-600"
           >
             {loading.update ? 'Updating...' : 'Update'}
           </button>
@@ -53,7 +51,7 @@ export const PostForm: FC<PostFormProps> = ({ defaultTitle, defaultText, titleEr
               name='intent'
               value={INTENT.create}
               disabled={loading.create}
-              className={`${BTN} text-green-600`}
+              className="text-green-600"
             >
               {loading.create ? 'Creating...' : 'Create'}
             </button>
@@ -67,7 +65,7 @@ export const PostForm: FC<PostFormProps> = ({ defaultTitle, defaultText, titleEr
               name='intent'
               value={INTENT.delete}
               disabled={loading.delete}
-              className={`${BTN} text-red-600`}
+              className="text-red-600"
             >
               {loading.delete ? 'Deleting...' : 'Delete'}
             </button>

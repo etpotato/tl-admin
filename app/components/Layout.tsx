@@ -1,9 +1,7 @@
 import type { FC } from 'react'
 
-const Layout: FC = ({ children }) => (
-  <div className="container max-w-screen-md mx-auto px-4">
+export const Layout: FC = ({ children }) => (
+  <div className="container max-w-screen-md mx-auto p-4">
     {children}
   </div>
 )
-
-export default Layout

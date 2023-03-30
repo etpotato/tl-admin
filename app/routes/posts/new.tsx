@@ -1,7 +1,8 @@
 import { useActionData } from "@remix-run/react"
 import type { ActionArgs} from "@remix-run/node";
 import { redirect} from "@remix-run/node"
-import {  DUPLICATE_ERROR_CODE, ERROR_MSG, INTENT } from '~/models/posts/const'
+import { ERROR_MSG, INTENT } from '~/models/posts/const'
+import { DUPLICATE_ERROR_CODE } from '~/const'
 import { PostForm } from '~/components/PostForm'
 import { getSlugFromTitle, respondWithError } from "~/models/posts/actions.server"
 import type { PostsInsert } from "~/models/posts/db.server";

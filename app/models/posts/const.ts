@@ -4,8 +4,6 @@ export const INTENT = {
   delete: 'delete',
 } as const
 
-export const DUPLICATE_ERROR_CODE = '23505'
-
 export const ERROR_MSG = {
   empty: 'Title is required',
   duplicate: 'Title already have been used. Must be unique',
