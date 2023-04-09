@@ -31,7 +31,7 @@ function getNewUserShema(secret: string) {
 }
 
 export async function action({ request }: ActionArgs) {
-  const NewUserSchema = getNewUserShema(process.env.SIGNUP_SECRET || 'random')
+  const NewUserSchema = getNewUserShema(process.env.INVITE_CODE || 'random')
   const formData = await request.formData()
   const userData = Object.fromEntries(formData.entries())
 
@@ -58,7 +58,7 @@ export async function action({ request }: ActionArgs) {
     return json({ error: resError }, { status: 500, statusText: 'create user error' })
   }
 
-  return redirect('/')
+  return redirect('/posts')
 }
 
 export default function Signup() {
@@ -74,19 +74,19 @@ export default function Signup() {
         <ValidationError msg={actionData?.error ? 'Invalid input data' : ''} />
         <label className="block mb-4">
           <span className="block mb-2">
-            Login: <ValidationError msg={actionData?.error?.username?.[0]} />
+            Login: <ValidationError msg={actionData?.error?.username?.join(',')} />
           </span>
           <input type="text" name="username" autoComplete="off" className="block"/>
         </label>
         <label className="block mb-4">
           <span className="block mb-2">
-            Password: <ValidationError msg={actionData?.error?.password?.[0]} />
+            Password: <ValidationError msg={actionData?.error?.password?.join(',')} />
           </span>
           <input type="password" name="password" autoComplete="off" className="block"/>
         </label>
         <label className="block mb-4">
           <span className="block mb-2">
-            Invite code: <ValidationError msg={actionData?.error?.secret?.[0]} />
+            Invite code: <ValidationError msg={actionData?.error?.secret?.join(',')} />
           </span>
           <input type="text" name="secret" autoComplete="off" className="block"/>
         </label>

@@ -48,7 +48,7 @@ export async function action({ request }: ActionArgs) {
     return json({ error: { db: ['Invalid login or password'] } }, { status: 400, statusText: 'Validation error' })
   }
 
-  return redirect('/')
+  return redirect('/posts')
 }
 
 export default function Login() {
@@ -64,13 +64,13 @@ export default function Login() {
       <Form method="post">
         <label className="block mb-4">
           <span className="block mb-2">
-            Login: <ValidationError msg={actionData?.error?.username?.[0]} />
+            Login: <ValidationError msg={actionData?.error?.username?.join(',')} />
           </span>
           <input type="text" name="username" autoComplete="username" className="block"/>
         </label>
         <label className="block mb-4">
           <span className="block mb-2">
-            Password: <ValidationError msg={actionData?.error?.password?.[0]} />
+            Password: <ValidationError msg={actionData?.error?.password?.join(',')} />
           </span>
           <input type="password" name="password" autoComplete="current-password" className="block"/>
         </label>
